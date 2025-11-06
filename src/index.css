@@ -1,0 +1,107 @@
+:root {
+  --sidebar-width: 24rem; /* 384px */
+}
+
+/* Basic, plain-CSS styles (no Tailwind/PostCSS) */
+body {
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  overflow: hidden;
+}
+
+#sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  background: #ffffff;
+  padding: 1.5rem; /* ~p-6 */
+  overflow-y: auto;
+  box-shadow: 0 10px 20px rgba(2,6,23,0.06);
+  transition: transform 0.3s ease-in-out;
+}
+
+/* Collapsible content helper */
+.collapsible-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
+  opacity: 1;
+}
+.collapsible-content.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Destination list visuals */
+.destination-list-item {
+  position: relative;
+  padding-left: 2.25rem; /* space for dot + gap */
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc; /* neutral */
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.destination-list-item::after,
+.destination-list-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+}
+
+.destination-list-item:not(:last-child)::before {
+  left: 1.0625rem; /* ~17px */
+  top: 32px;
+  bottom: -8px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    #cbd5e1,
+    #cbd5e1 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.destination-list-item::after {
+  left: 0.75rem; /* 12px */
+  top: 0.75rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #cbd5e1;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #cbd5e1;
+  z-index: 1;
+}
+
+.destination-list-item.is-start::after {
+  background-color: #22c55e;
+  box-shadow: 0 0 0 2px #22c55e;
+}
+.destination-list-item.is-end::after {
+  background-color: #ef4444;
+  box-shadow: 0 0 0 2px #ef4444;
+}
+
+.destination-list-item.is-end:not(:last-child)::before { display: none; }
+
+/* Message/toast */
+#message-box {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  transition: top 0.4s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  color: #fff;
+}
+#message-box.show { top: 20px; }
