@@ -1,0 +1,30 @@
+:root {
+  /* Layout tokens */
+  --sidebar-width: 384px; /* 96 * 4 */
+  --dot-size: 12px;
+  --dot-left: 12px; /* left for dot */
+  --dot-line-left: 17px; /* left for vertical line */
+
+  /* Existing semantic colors */
+  --dot-color-default: #cbd5e1;
+  --dot-color-start: #22c55e;
+  --dot-color-end: #ef4444;
+
+  /* Design tokens (from provided image)
+     Backgrounds */
+  --color-bg: #F9FAFF;
+  --color-bg-offset: #EEEFF5;
+  --color-bg-elevated: #FFFFFF;
+
+  /* Foregrounds */
+  --color-fg: #022456;
+  --color-fg-offset: #ACB5D6;
+
+  /* UI element tones */
+  --tone-trip: #3A7DFF;
+  --tone-trax: #FF8C3A;
+  --tone-delete: #FF0000;
+  --tone-delete-muted: rgba(255,0,0,0.2);
+  --tone-play: #45C609;
+  --tone-play-muted: rgba(69,198,9,0.2);
+}

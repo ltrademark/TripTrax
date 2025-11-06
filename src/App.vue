@@ -6,124 +6,117 @@
     </div>
 
     <!-- Sidebar -->
-    <div id="sidebar" class="bg-white p-6 overflow-y-auto flex flex-col">
-      <header class="flex items-center justify-between pb-4 border-b border-gray-200">
-        <div class="flex items-center space-x-2">
-          <span class="bg-blue-600 text-white font-bold text-xl p-2 rounded-lg">TT</span>
-          <h1 class="text-2xl font-bold text-gray-900">TripTrax</h1>
+    <div id="sidebar" class="sidebar">
+      <header class="sidebar-header">
+        <div class="branding-wrap">
+          <Icon name="logo_full" />
         </div>
-        <button class="p-1 rounded-full hover:bg-gray-100">
-          <i class="ph ph-arrow-left text-xl text-gray-500"></i>
+        <button class="sidebar-header--btn" aria-label="collapse">
+          <Icon name="Arrow-Left" class="icon" />
         </button>
       </header>
 
-      <div class="flex-grow space-y-6 pt-6">
+      <div class="sidebar-content">
         <!-- Trip Section -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center cursor-pointer" onclick="toggleCollapse('trip')">
-            <h2 class="text-lg font-semibold text-gray-900">Trip</h2>
-            <i id="trip-chevron" class="ph ph-caret-up text-lg text-gray-500 transition-transform"></i>
-          </div>
-
+        <div class="section">
+          <div class="section-header" @click="toggleCollapse('trip')">
+            <h2 class="section-title">Trip</h2>
+            <Icon ref="tripChevron" name="Chevron-up" :class="{ 'is-collapsed': collapseTrips }" />
+          </div> 
           <!-- Trip Collapsed Summary -->
-          <div id="trip-collapsed-summary" class="hidden text-sm pl-1 mt-2 space-y-1.5">
-            <p class="flex items-center space-x-2">
-              <i class="ph ph-flag-fill text-green-500 text-base"></i>
-              <span id="summary-trip-start" class="font-medium text-gray-700"></span>
+          <div v-if="collapseTrips" class="collapsed-summary">
+            <p class="summary-row">
+              <Icon name="Checkmark" class="start-icon" />
+              <span id="summary-trip-start" class="summary-text"></span>
             </p>
-            <p class="flex items-center space-x-2">
-              <i class="ph ph-flag-checkered-fill text-red-500 text-base"></i>
-              <span id="summary-trip-end" class="font-medium text-gray-700"></span>
+            <p class="summary-row">
+              <Icon name="Close" class="end-icon" />
+              <span id="summary-trip-end" class="summary-text"></span>
             </p>
-            <p class="pl-1"><span id="summary-trip-stops" class="text-xs font-medium text-gray-500"></span></p>
-            <p class="pl-1 pt-1"><span id="summary-trip-duration" class="font-medium text-blue-600"></span></p>
+            <p class="summary-indent"><span id="summary-trip-stops" class="summary-stops"></span></p>
+            <p class="summary-indent"><span id="summary-trip-duration" class="summary-duration"></span></p>
           </div>
 
-          <div id="trip-content" class="space-y-3 collapsible-content">
-            <div class="relative">
-              <i class="ph ph-magnifying-glass text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-              <input type="text" id="destination-input" placeholder="Add Destination" class="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <div id="destination-results" class="autocomplete-results absolute w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg hidden">
-                <!-- Geocoding results here -->
-              </div>
+          <div v-if="!collapseTrips" class="collapsible-content">
+            <div class="search-wrap">
+              <Icon name="Search" class="search-icon" />
+              <input v-model="destinationQuery" type="text" id="destination-input" placeholder="Add Destination" class="search-input">
+              <div id="destination-results" class="autocomplete-results"></div>
             </div>
-            <ul id="destination-list" class="space-y-1">
-              <!-- Destinations will be added here -->
-            </ul>
-            <div id="trip-summary" class="hidden text-sm font-medium text-blue-600 pl-1">
-              Total Trip duration <span id="trip-duration" class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full ml-1">0 hours 0 Minutes</span>
+            <ul id="destination-list" class="destination-list"></ul>
+            <div id="trip-summary" class="trip-summary">
+              Total Trip duration <span id="trip-duration" class="trip-duration-pill">0 hours 0 Minutes</span>
             </div>
           </div>
         </div>
 
         <!-- Source Section -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center cursor-pointer" onclick="toggleCollapse('source')">
-            <h2 class="text-lg font-semibold text-gray-900">Source</h2>
-            <i id="source-chevron" class="ph ph-caret-up text-lg text-gray-500 transition-transform"></i>
+        <div class="section">
+          <div class="section-header">
+            <h2 class="section-title">Source</h2>
           </div>
 
-          <div id="source-content" class="space-y-3 collapsible-content">
-            <p class="text-sm text-gray-600">Connect a music source to search for tracks.</p>
-            <div class="flex space-x-3">
-              <button id="auth-spotify" onclick="mockAuth('spotify')" class="p-3 rounded-lg bg-gray-100 text-green-500 hover:bg-gray-200 border border-gray-200 transition-all">
-                <i class="ph-fill ph-spotify-logo text-3xl"></i>
+          <div id="source-content">
+            <p class="muted">Connect a music source to search for tracks.</p>
+            <div class="auth-row">
+              <button id="auth-spotify" onclick="mockAuth('spotify')" class="auth-btn auth-spotify">
+                <Icon name="Spotify" class="logo" />
               </button>
-              <button id="auth-apple" onclick="mockAuth('apple')" class="p-3 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200 transition-all">
-                <i class="ph-fill ph-apple-logo text-3xl"></i>
+              <button id="auth-apple" onclick="mockAuth('apple')" class="auth-btn auth-apple">
+                <Icon name="AppleMusic" class="logo" />
               </button>
-              <button id="auth-youtube" onclick="mockAuth('youtube')" class="p-3 rounded-lg bg-gray-100 text-red-500 hover:bg-gray-200 border border-gray-200 transition-all">
-                <i class="ph-fill ph-youtube-logo text-3xl"></i>
+              <button id="auth-youtube" onclick="mockAuth('youtube')" class="auth-btn auth-youtube">
+                <Icon name="YouTube" class="logo" />
               </button>
             </div>
           </div>
         </div>
 
         <!-- Trax Section -->
-        <div class="space-y-3">
-          <div class="flex justify-between items-center cursor-pointer" onclick="toggleCollapse('trax')">
-            <h2 class="text-lg font-semibold text-gray-900">Trax</h2>
-            <i id="trax-chevron" class="ph ph-caret-up text-lg text-gray-500 transition-transform"></i>
+        <div class="section">
+          <div class="section-header" @click="toggleCollapse('trax')">
+            <h2 class="section-title">Trax</h2>
+            <Icon name="Chevron-up" :class="{ 'is-collapsed': collapseTrax }" />
           </div>
 
           <!-- Trax Collapsed Summary -->
-                <div id="trax-collapsed-summary" class="hidden text-sm pl-1 mt-2 space-y-1.5">
-            <p><span id="summary-trax-count" class="font-medium text-gray-700"></span></p>
-            <p>Remaining: <span id="summary-trax-remaining" class="font-medium text-orange-600"></span></p>
+          <div v-if="collapseTrax" class="collapsed-summary">
+            <p><span id="summary-trax-count" class="summary-text"></span></p>
+            <p>Remaining: <span id="summary-trax-remaining" class="remaining-time"></span></p>
           </div>
 
-          <div id="trax-content" class="space-y-3 collapsible-content">
-            <div class="relative">
-              <i class="ph ph-magnifying-glass text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
-              <input type="text" id="song-input" placeholder="Connect a source first..." class="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" disabled>
-              <div id="song-results" class="autocomplete-results absolute w-full bg-white border border-gray-200 rounded-lg mt-1 shadow-lg hidden">
+          <div v-if="!collapseTrax" class="collapsible-content">
+            <div class="search-wrap">
+              <Icon name="Search" class="search-icon" />
+              <input type="text" id="song-input" placeholder="Connect a source first..." class="search-input" disabled>
+              <div id="song-results" class="autocomplete-results">
                 <!-- Song results here -->
               </div>
             </div>
-            <ul id="song-list" class="space-y-2">
+            <ul id="song-list" class="song-list">
               <!-- Songs will be added here -->
             </ul>
-            <div id="trax-summary" class="hidden text-sm font-medium pl-1">
-              Remaining Time <span id="playlist-remaining" class="text-orange-600">0 hours 0 Minutes</span>
+            <div id="trax-summary" class="trax-summary">
+              Remaining Time <span id="playlist-remaining" class="remaining-time">0 hours 0 Minutes</span>
             </div>
           </div>
         </div>
 
         <!-- Playlist Creation Section -->
-        <div id="playlist-creator" class="hidden space-y-3 pt-4 border-t border-gray-200">
-          <input type="text" id="playlist-name" placeholder="Playlist Name" class="w-full px-4 py-2.5 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <button id="create-playlist-btn" class="w-full bg-green-500 text-white font-semibold py-2.5 rounded-lg hover:bg-green-600 transition-colors" onclick="createPlaylist()">
+        <div id="playlist-creator" class="playlist-creator">
+          <input type="text" id="playlist-name" placeholder="Playlist Name" class="search-input">
+          <button id="create-playlist-btn" class="btn-primary wide" onclick="createPlaylist()">
             Create Playlist
           </button>
         </div>
 
       </div> <!-- /flex-grow -->
 
-      <footer class="pt-6 border-t border-gray-200">
-        <button class="w-full bg-red-50 text-red-600 font-semibold py-2.5 rounded-lg hover:bg-red-100 transition-colors" onclick="signout()">
+      <footer class="app-footer">
+        <button class="btn-danger wide" onclick="signout()">
           Sign Out & Restart
         </button>
-        <p class="text-xs text-gray-400 text-center mt-4">© 2025 TripTrax. All rights reserved.</p>
+        <p class="footer-note">© 2025 TripTrax. All rights reserved.</p>
       </footer>
     </div>
 
@@ -133,132 +126,110 @@
 </template>
 
 <script>
+import Icon from './components/Icon.vue'
+import CloseIcon from './Icons/Close.svg?raw'
+import L from 'leaflet'
+
 export default {
   name: 'App',
+  components: { Icon },
+  
+  data() {
+    return {
+      map: null,
+      routingControl: null,
+      collapseTrips: false,
+      collapseTrax: false,
+      collapseSidebar: false,
+      destinationQuery:'',
+      destinations: [], // { name: 'City, ST', lat: 123, lng: 123 }
+      songs: [], // { title: 'Song', artist: 'Artist', duration: 180 (seconds) }
+      activeSource: null,
+      totalTripTime: 0,
+      sections: {
+        trip: { collapsed: false },
+        source: { collapsed: false },
+        trax: { collapsed: false }
+      },
+      searchQuery: '',
+      songQuery: '',
+      playlistName: '',
+      messageVisible: false,
+      messageType: 'info',
+      messageText: '',
+      songsQuery: '',
+      mockSongs: [
+        { title: 'Take Me Home, Country Roads', artist: 'John Denver', duration: 188 },
+        { title: 'Hotel California', artist: 'Eagles', duration: 391 },
+        { title: 'Bohemian Rhapsody', artist: 'Queen', duration: 354 },
+        { title: 'Stairway to Heaven', artist: 'Led Zeppelin', duration: 482 },
+        { title: 'Running on Empty', artist: 'Jackson Browne', duration: 299 },
+        { title: 'Life is a Highway', artist: 'Tom Cochrane', duration: 266 },
+        { title: 'Here I Go Again', artist: 'Whitesnake', duration: 275 },
+      ]
+    }
+  },
+
+
+    /* DOM manipulation replaced with Vue.js reactive state */
+
   mounted() {
-    // --- Helper: Query Selector ---
-    const $ = (selector) => document.querySelector(selector);
-
-    // --- State ---
-    let map;
-    let routingControl;
-    let destinations = []; // { name: 'City, ST', lat: 123, lng: 123 }
-    let songs = []; // { title: 'Song', artist: 'Artist', duration: 180 (seconds) }
-    let activeSource = null;
-    let totalTripTime = 0; // in seconds
-    let messageTimer;
-    let geocodeTimer;
-
-    // --- Mock Data ---
-    const mockSongs = [
-      { title: 'Take Me Home, Country Roads', artist: 'John Denver', duration: 188 },
-      { title: 'Hotel California', artist: 'Eagles', duration: 391 },
-      { title: 'Bohemian Rhapsody', artist: 'Queen', duration: 354 },
-      { title: 'Stairway to Heaven', artist: 'Led Zeppelin', duration: 482 },
-      { title: 'Running on Empty', artist: 'Jackson Browne', duration: 299 },
-      { title: 'Life is a Highway', artist: 'Tom Cochrane', duration: 266 },
-      { title: 'Here I Go Again', artist: 'Whitesnake', duration: 275 },
-    ];
-
-    // --- DOM Elements ---
-    const $destinationInput = $('#destination-input');
-    const $destinationResults = $('#destination-results');
-    const $destinationList = $('#destination-list');
-    const $tripSummary = $('#trip-summary');
-    const $tripDuration = $('#trip-duration');
-
-    const $songInput = $('#song-input');
-    const $songResults = $('#song-results');
-    const $songList = $('#song-list');
-    const $traxSummary = $('#trax-summary');
-    const $playlistRemaining = $('#playlist-remaining');
-
-    const $playlistCreator = $('#playlist-creator');
-    const $playlistNameInput = $('#playlist-name');
-    const $createPlaylistBtn = $('#create-playlist-btn');
-    const $messageBox = $('#message-box');
-    const $messageText = $('#message-text');
-
-    // Summary Elements
-    const $tripCollapsedSummary = $('#trip-collapsed-summary');
-    const $summaryTripStart = $('#summary-trip-start');
-    const $summaryTripEnd = $('#summary-trip-end');
-    const $summaryTripStops = $('#summary-trip-stops');
-    const $summaryTripDuration = $('#summary-trip-duration');
-
-    const $traxCollapsedSummary = $('#trax-collapsed-summary');
-    const $summaryTraxCount = $('#summary-trax-count');
-    const $summaryTraxRemaining = $('#summary-trax-remaining');
-
-    // --- INITIALIZATION ---
     // Initialize Map
-    map = L.map('map').setView([38.9072, -77.0369], 8); // Centered on D.C.
+    this.map = L.map('map').setView([38.9072, -77.0369], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    }).addTo(this.map);
 
     // Initialize Routing Control
-    routingControl = L.Routing.control({
+    this.routingControl = L.Routing.control({
       waypoints: [],
       routeWhileDragging: false,
       addWaypoints: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
-      show: false, // Hide text instructions
+      show: false,
       lineOptions: {
-        styles: [{ color: '#2563EB', opacity: 0.8, weight: 6 }]
+        styles: [{ color: 'var(--tone-trip)', opacity: 0.8, weight: 6 }]
       }
-    }).addTo(map);
+    }).addTo(this.map);
 
-    // Listen for route summary
-    routingControl.on('routesfound', function(e) {
-      const routes = e.routes;
-      const summary = routes[0].summary;
-      totalTripTime = summary.totalTime; // Time in seconds
-      updateDurations();
+    // Listen for route updates
+    this.routingControl.on('routesfound', (e) => {
+      this.totalTripTime = e.routes[0].summary.totalTime;
+      this.updateDurations();
     });
+  },
 
-    // --- Event Listeners ---
-    // Destination Search
-    $destinationInput.addEventListener('keyup', (e) => {
-      clearTimeout(geocodeTimer);
-      const query = e.target.value;
-      if (query.length < 3) {
-        $destinationResults.classList.add('hidden');
-        return;
-      }
-      // Debounce the search
-      geocodeTimer = setTimeout(() => {
-        searchNominatim(query);
-      }, 300);
-    });
-
-    // Song Search
-    $songInput.addEventListener('keyup', (e) => {
-      const query = e.target.value.toLowerCase();
-      if (query.length < 2) {
-        $songResults.classList.add('hidden');
-        return;
-      }
-      const results = mockSongs.filter(song => 
+  computed: {
+    songSearchResults() {
+      if (this.songQuery.length < 2) return [];
+      
+      const query = this.songQuery.toLowerCase();
+      return this.mockSongs.filter(song => 
         song.title.toLowerCase().includes(query) || 
         song.artist.toLowerCase().includes(query)
       );
-      renderSongResults(results);
-    });
+    }
+  },
 
-    // Global click to hide dropdowns
-    document.addEventListener('click', (e) => {
-      if (e.target.id !== 'destination-input') {
-        $destinationResults.classList.add('hidden');
+  watch: {
+    searchQuery: {
+      handler(query) {
+        if (query.length < 3) {
+          this.searchResults = [];
+          return;
+        }
+        
+        clearTimeout(this.searchDebounce);
+        this.searchDebounce = setTimeout(() => {
+          this.searchNominatim();
+        }, 300);
       }
-      if (e.target.id !== 'song-input') {
-        $songResults.classList.add('hidden');
-      }
-    });
+    }
+  },
 
-    // --- Functions ---
-    async function searchNominatim(query) {
+  methods: {
+    async searchNominatim() {
       const endpoint = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
       try {
         const response = await fetch(endpoint, { headers: { 'Accept-Language': 'en' } });
@@ -268,9 +239,8 @@ export default {
         console.error('Error fetching from Nominatim:', error);
         showMessage('Error searching for location.', 'error');
       }
-    }
-
-    function renderDestinationResults(results) {
+    },
+    renderDestinationResults(results) {
       $destinationResults.innerHTML = '';
       if (results.length === 0) {
         $destinationResults.innerHTML = '<div class="p-3 text-gray-500">No results found.</div>';
@@ -289,9 +259,8 @@ export default {
         });
       }
       $destinationResults.classList.remove('hidden');
-    }
-
-    function renderSongResults(results) {
+    },
+    renderSongResults(results) {
       $songResults.innerHTML = '';
       if (results.length === 0) {
         $songResults.innerHTML = '<div class="p-3 text-gray-500">No songs found.</div>';
@@ -313,54 +282,49 @@ export default {
         });
       }
       $songResults.classList.remove('hidden');
-    }
-
-    function addDestination(name, lat, lon) {
+    },
+    addDestination(name, lat, lon) {
       // Simplify name
       const simpleName = name.split(',')[0];
       destinations.push({ name: simpleName, lat: lat, lng: lon });
       renderDestinations();
       updateRoute();
       showMessage(`Added ${simpleName} to trip!`, 'success');
-    }
-
-    function removeDestination(index) {
+    },
+    removeDestination(index) {
       const removed = destinations.splice(index, 1);
       renderDestinations();
       updateRoute();
       showMessage(`Removed ${removed[0].name}.`, 'info');
-    }
-
-    function addSong(song) {
+    },
+    addSong(song) {
       songs.push(song);
       renderSongs();
       updateDurations();
       showMessage(`Added ${song.title}!`, 'success');
-    }
-
-    function removeSong(index) {
+    },
+    removeSong(index) {
       const removed = songs.splice(index, 1);
       renderSongs();
       updateDurations();
       showMessage(`Removed ${removed[0].title}.`, 'info');
-    }
-
-    function renderDestinations() {
+    },
+    renderDestinations() {
       $destinationList.innerHTML = '';
       destinations.forEach((dest, index) => {
         const li = document.createElement('li');
-        li.className = 'destination-list-item flex items-center justify-between bg-gray-50 rounded-lg p-3';
+        li.className = 'destination-list-item';
 
         // Add start/end classes
         if (index === 0) li.classList.add('is-start');
         if (index === destinations.length - 1) li.classList.add('is-end');
 
         li.innerHTML = `
-          <div class="flex items-center">
-            <span class="text-gray-800 font-medium">${dest.name}</span>
+          <div class="destination-main">
+            <span class="destination-name">${dest.name}</span>
           </div>
-          <button onclick="removeDestination(${index})" class="p-1 rounded-full text-red-400 hover:bg-red-100 hover:text-red-500">
-            <i class="ph ph-x-circle text-2xl"></i>
+          <button onclick="removeDestination(${index})" class="remove-btn" aria-label="remove">
+            ${CloseIcon}
           </button>
         `;
         $destinationList.appendChild(li);
@@ -395,22 +359,21 @@ export default {
 
       // Update collapse state
       toggleCollapse('trip', true); // Force open on add
-    }
-
-    function renderSongs() {
+    },
+    renderSongs() {
       $songList.innerHTML = '';
       songs.forEach((song, index) => {
-        const li = document.createElement('li');
-        li.className = 'flex items-center justify-between bg-gray-50 rounded-lg p-3';
+      const li = document.createElement('li');
+        li.className = 'song-list-item';
         li.innerHTML = `
-          <div class="truncate pr-2">
-            <p class="font-medium text-gray-800 truncate">${song.title}</p>
-            <p class="text-sm text-gray-500 truncate">${song.artist}</p>
+          <div class="song-main">
+            <p class="song-title">${song.title}</p>
+            <p class="song-artist">${song.artist}</p>
           </div>
-          <div class="flex items-center space-x-3 flex-shrink-0">
-            <span class="text-sm text-gray-400">${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}</span>
-            <button onclick="removeSong(${index})" class="p-1 rounded-full text-red-400 hover:bg-red-100 hover:text-red-500">
-              <i class="ph ph-x-circle text-2xl"></i>
+          <div class="song-meta">
+            <span class="song-duration">${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}</span>
+            <button onclick="removeSong(${index})" class="remove-btn" aria-label="remove-song">
+              ${CloseIcon}
             </button>
           </div>
         `;
@@ -422,25 +385,22 @@ export default {
 
       $traxSummary.classList.remove('hidden');
       $playlistCreator.classList.remove('hidden');
-    }
-
-    function updateRoute() {
+    },
+    updateRoute() {
       if (destinations.length < 2) {
         routingControl.setWaypoints([]);
         return;
       }
       const waypoints = destinations.map(d => L.latLng(d.lat, d.lng));
       routingControl.setWaypoints(waypoints);
-    }
-
-    function formatTime(seconds) {
+    },
+    formatTime(seconds) {
       if (seconds < 0) seconds = 0;
       const h = Math.floor(seconds / 3600);
       const m = Math.floor((seconds % 3600) / 60);
       return `${h} hour${h !== 1 ? 's' : ''} ${m} Minute${m !== 1 ? 's' : ''}`;
-    }
-
-    function updateDurations() {
+    },
+    updateDurations() {
       // Update Trip Duration
       const tripTimeFormatted = formatTime(totalTripTime);
       $tripDuration.textContent = tripTimeFormatted;
@@ -455,64 +415,74 @@ export default {
       $summaryTraxRemaining.textContent = remainingTimeFormatted;
 
       if (remainingTime < 0) {
-        $playlistRemaining.classList.remove('text-orange-600', 'text-green-600');
-        $playlistRemaining.classList.add('text-red-600');
-        $summaryTraxRemaining.classList.remove('text-orange-600', 'text-green-600');
-        $summaryTraxRemaining.classList.add('text-red-600');
+        $playlistRemaining.classList.remove('remaining-time', 'success');
+        $playlistRemaining.classList.add('danger');
+        $summaryTraxRemaining.classList.remove('remaining-time', 'success');
+        $summaryTraxRemaining.classList.add('danger');
       } else if (totalTripTime > 0 && remainingTime < (totalTripTime * 0.1)) { // Within 10%
-        $playlistRemaining.classList.remove('text-orange-600', 'text-red-600');
-        $playlistRemaining.classList.add('text-green-600');
-        $summaryTraxRemaining.classList.remove('text-orange-600', 'text-red-600');
-        $summaryTraxRemaining.classList.add('text-green-600');
+        $playlistRemaining.classList.remove('remaining-time', 'danger');
+        $playlistRemaining.classList.add('success');
+        $summaryTraxRemaining.classList.remove('remaining-time', 'danger');
+        $summaryTraxRemaining.classList.add('success');
       } else {
-        $playlistRemaining.classList.remove('text-green-600', 'text-red-600');
-        $playlistRemaining.classList.add('text-orange-600');
-        $summaryTraxRemaining.classList.remove('text-green-600', 'text-red-600');
-        $summaryTraxRemaining.classList.add('text-orange-600');
+        $playlistRemaining.classList.remove('success', 'danger');
+        $playlistRemaining.classList.add('remaining-time');
+        $summaryTraxRemaining.classList.remove('success', 'danger');
+        $summaryTraxRemaining.classList.add('remaining-time');
       }
 
       // Update create button state
       $createPlaylistBtn.disabled = !activeSource || songs.length === 0 || !$playlistNameInput.value;
-    }
-
-    function toggleCollapse(section, forceOpen = null) {
-      const content = $(`#${section}-content`);
-      const chevron = $(`#${section}-chevron`);
-      const summary = $(`#${section}-collapsed-summary`);
-
-      let shouldBeOpen;
-
-      if (forceOpen !== null) {
-        shouldBeOpen = forceOpen;
-      } else {
-        shouldBeOpen = content.classList.contains('collapsed');
+    },
+    toggleCollapse(section) {
+      switch(section) {
+        case 'trip':
+          this.collapseTrips = !this.collapseTrips;
+          break;
+        case 'trax':
+          this.collapseTrax = !this.collapseTrax;
+          break;
+        case 'sidebar':
+          this.collapseSidebar = !this.collapseSidebar;
+          break;
       }
 
-      if (shouldBeOpen) {
-        // Open it
-        content.classList.remove('collapsed');
-        chevron.style.transform = 'rotate(0deg)';
-        if (summary) summary.classList.add('hidden'); // Hide summary
-      } else {
-        // Close it
-        content.classList.add('collapsed');
-        chevron.style.transform = 'rotate(180deg)';
+      // const content = $(`#${section}-content`);
+      // const chevron = $(`#${section}-chevron`);
+      // const summary = $(`#${section}-collapsed-summary`);
 
-        // Show summary IF data exists
-        if (summary) {
-          let hasData = false;
-          if (section === 'trip' && destinations.length > 0) hasData = true;
-          if (section === 'trax' && songs.length > 0) hasData = true;
-          if (section === 'source') hasData = false; // Never show summary for source
+      // let shouldBeOpen;
 
-          if (hasData) {
-            summary.classList.remove('hidden');
-          }
-        }
-      }
-    }
+      // if (forceOpen !== null) {
+      //   shouldBeOpen = forceOpen;
+      // } else {
+      //   shouldBeOpen = content.classList.contains('collapsed');
+      // }
 
-    function mockAuth(source) {
+      // if (shouldBeOpen) {
+      //   // Open it
+      //   content.classList.remove('collapsed');
+      //   chevron.style.transform = 'rotate(0deg)';
+      //   if (summary) summary.classList.add('hidden'); // Hide summary
+      // } else {
+      //   // Close it
+      //   content.classList.add('collapsed');
+      //   chevron.style.transform = 'rotate(180deg)';
+
+      //   // Show summary IF data exists
+      //   if (summary) {
+      //     let hasData = false;
+      //     if (section === 'trip' && destinations.length > 0) hasData = true;
+      //     if (section === 'trax' && songs.length > 0) hasData = true;
+      //     if (section === 'source') hasData = false; // Never show summary for source
+
+      //     if (hasData) {
+      //       summary.classList.remove('hidden');
+      //     }
+      //   }
+      // }
+    },
+    mockAuth(source) {
       // Reset all buttons to their default (inactive) state
       $(`#auth-spotify`).classList.remove('bg-green-500', 'text-white');
       $(`#auth-spotify`).classList.add('bg-gray-100', 'text-green-500');
@@ -541,9 +511,8 @@ export default {
       $songInput.placeholder = `Search ${source.charAt(0).toUpperCase() + source.slice(1)}...`;
       showMessage(`Connected to ${source}! You can now search for songs.`, 'success');
       toggleCollapse('trax', true);
-    }
-
-    function createPlaylist() {
+    },
+    createPlaylist() {
       const playlistName = $playlistNameInput.value;
       if (!playlistName) {
         showMessage('Please enter a playlist name.', 'error');
@@ -567,9 +536,8 @@ export default {
       renderSongs();
       updateDurations();
       $playlistNameInput.value = '';
-    }
-
-    function signout() {
+    },
+    signout() {
       // Reset state
       destinations = [];
       songs = [];
@@ -599,9 +567,8 @@ export default {
       $traxCollapsedSummary.classList.add('hidden');
 
       showMessage('Signed out and reset applicaton.', 'info');
-    }
-
-    function showMessage(message, type = 'info') {
+    },
+    showMessage(message, type = 'info') {
       $messageText.textContent = message;
 
       // Remove all type classes
@@ -626,35 +593,26 @@ export default {
         // Wait for transition to finish before hiding
         setTimeout(() => $messageBox.classList.add('hidden'), 500);
       }, 3000);
-    }
-
-    // Expose functions globally for inline handlers to work
-    window.toggleCollapse = toggleCollapse;
-    window.mockAuth = mockAuth;
-    window.removeDestination = removeDestination;
-    window.removeSong = removeSong;
-    window.createPlaylist = createPlaylist;
-    window.signout = signout;
-    window.addDestination = addDestination; // sometimes used programmatically
+    },
   }
 }
 </script>
 
 <style>
-:root {
-  --sidebar-width: 384px; /* 96 * 4 */
-  --dot-size: 12px;
-  --dot-left: 12px; /* left for dot */
-  --dot-line-left: 17px; /* left for vertical line */
-  --dot-color-default: #cbd5e1;
-  --dot-color-start: #22c55e;
-  --dot-color-end: #ef4444;
-}
+@import './corevar.css';
 
+*, *:before, *:after { box-sizing: border-box; }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
 /* Basic layout */
 body {
   font-family: 'Inter', sans-serif;
   overflow: hidden; /* Prevent body scroll */
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 #map {
@@ -671,11 +629,252 @@ body {
   top: 0;
   left: 0;
   z-index: 20;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  background: var(--color-bg-elevated);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
   transition: transform 0.3s ease-in-out;
-}
+  color: var(--color-fg);
+  
+  /* Sidebar inputs */
+  input[type="text"] {
+    background: var(--color-bg-offset);
+    color: var(--color-fg);
+  }
 
-/* Style to hide default routing machine output */
+  input::placeholder {
+    color: var(--color-fg-offset);
+  }
+ }
+ 
+ /* Semantic classes replacing utility classes */
+ .sidebar {
+   display: flex;
+   flex-direction: column;
+   padding: 1.5rem; /* matches previous p-6 */
+   overflow-y: auto;
+ }
+ 
+ .sidebar-header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding-bottom: 1rem;
+   border-bottom: 1px solid rgba(2,36,86,0.06);
+   & .sidebar-header--btn {
+     border: none;
+     padding: 0.25rem;
+     border-radius: 9999px;
+     font-size: 1.4rem;
+     background: transparent;
+   }
+ }
+ 
+ .branding-wrap {
+   display: flex;
+   align-items: center;
+   gap: 0.5rem;
+   font-size: 2.5em;
+ }
+  
+ .app-title {
+   font-size: 1.25rem;
+   font-weight: 700;
+   color: var(--color-fg);
+ }
+ 
+ .icon-btn {
+   border-radius: 9999px;
+   padding: 0.25rem;
+   background: transparent;
+   border: none;
+ }
+ 
+ /* .icon { color: var(--color-fg-offset); font-size: 1.125rem; } */
+ 
+ .sidebar-content { flex: 1 1 auto; padding-top: 1.5rem; display: block; gap: 1.5rem; }
+ 
+ .section { margin-bottom: 1rem; }
+ 
+ .section-header {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   cursor: pointer;
+   & .is-collapsed {
+     transform: rotate(180deg);
+   }
+ }
+
+ .section-title {
+   font-size: 1rem;
+   font-weight: 700;
+   color: var(--color-fg);
+ }
+ 
+ .collapsed-summary { 
+   display: none; 
+   font-size: 0.875rem; 
+   padding-left: 0.25rem; 
+   margin-top: 0.5rem;
+
+   .summary-row {
+     display: flex;
+     align-items: center;
+     gap: 0.5rem;
+   }
+
+   .start-icon {
+     color: var(--tone-play);
+     font-size: 1rem;
+   }
+
+   .end-icon {
+     color: var(--tone-delete);
+     font-size: 1rem;
+   }
+
+   .summary-text {
+     font-weight: 500;
+     color: var(--color-fg);
+   }
+
+   .summary-indent {
+     padding-left: 0.25rem;
+   }
+
+   .summary-stops {
+     font-size: 0.75rem;
+     font-weight: 500;
+     color: var(--color-fg-offset);
+   }
+
+   .summary-duration {
+     font-weight: 500;
+     color: var(--tone-trip);
+   }
+ }
+
+ .search-wrap {
+   position: relative;
+ }
+
+ .search-icon {
+   position: absolute;
+   left: 0.75rem;
+   top: 50%;
+   transform: translateY(-50%);
+   color: var(--color-fg-offset);
+ }
+
+ .search-input {
+   width: 100%;
+   padding: 0.625rem 1rem 0.625rem 2.5rem;
+   border-radius: 0.75rem;
+   border: none;
+   background: var(--color-bg-offset);
+   color: var(--color-fg);
+ }
+
+ .destination-list {
+   list-style: none;
+   padding: 0;
+   margin: 0;
+   display: block;
+   gap: 0.5rem;
+ }
+
+ .trip-summary {
+   display: none;
+   font-size: 0.875rem;
+   font-weight: 600;
+   color: var(--tone-trip);
+   padding-left: 0.25rem;
+ }
+
+ .trip-duration-pill {
+   background: var(--tone-trip);
+   color: #fff;
+   font-size: 0.75rem;
+   font-weight: 700;
+   padding: 0.25rem 0.5rem;
+   border-radius: 999px;
+   margin-left: 0.5rem;
+ }
+
+ .muted {
+   color: var(--color-fg-offset);
+   font-size: 0.9rem;
+ }
+
+ .auth-row {
+   display: flex;
+   gap: 0.5rem;
+ }
+
+ .auth-btn {
+   background: var(--color-bg-offset);
+   border-radius: 0.75rem;
+   padding: 0.5rem;
+   border: 1px solid rgba(2, 36, 86, 0.06);
+ }
+
+ .auth-btn .logo {
+   font-size: 1.25rem;
+ }
+
+ .auth-spotify {
+   color: var(--tone-play);
+ }
+
+ .auth-apple {
+   color: var(--color-fg);
+ }
+
+ .auth-youtube {
+   color: var(--tone-delete);
+ }
+
+ .song-list {
+   list-style: none;
+   padding: 0;
+   margin: 0;
+ }
+
+ .trax-summary {
+   display: none;
+   font-size: 0.875rem;
+   font-weight: 500;
+   padding-left: 0.25rem;
+
+   .remaining-time {
+     color: var(--tone-trax);
+
+     &.success {
+       color: var(--tone-play);
+     }
+     &.danger {
+       color: var(--tone-delete);
+     }
+   }
+ }
+ .playlist-creator {
+   display: none;
+   padding-top: 1rem;
+   border-top: 1px solid rgba(2, 36, 86, 0.06);
+   gap: 0.75rem;
+ }
+
+ .btn-primary {
+   background: var(--tone-play);
+   color: #fff;
+   border: none;
+   padding: 0.625rem 1rem;
+   border-radius: 0.75rem;
+   font-weight: 600;
+ }
+
+ .btn-primary.wide {
+   width: 100%;
+ }
 .leaflet-routing-container {
   display: none;
 }
@@ -707,6 +906,10 @@ body {
   position: relative;
   padding-left: calc(var(--dot-left) + var(--dot-size) + 12px); /* space for dot + gap */
   min-height: 48px;
+  background: var(--color-bg-offset);
+  color: var(--color-fg);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
 
   /* pseudo elements grouped under the item */
   &::after,
@@ -745,19 +948,86 @@ body {
 
   /* modifiers */
   &.is-start::after {
-    background-color: var(--dot-color-start);
-    box-shadow: 0 0 0 2px var(--dot-color-start);
+    background-color: var(--tone-play);
+    box-shadow: 0 0 0 2px var(--tone-play);
   }
 
   &.is-end::after {
-    background-color: var(--dot-color-end);
-    box-shadow: 0 0 0 2px var(--dot-color-end);
+    background-color: var(--tone-delete);
+    box-shadow: 0 0 0 2px var(--tone-delete);
   }
 
   /* Remove dotted line from the end item when not last-child */
   &.is-end:not(:last-child)::before {
     display: none;
   }
+}
+
+/* New semantic styles for generated content */
+.destination-main {
+  display: flex;
+  align-items: center;
+}
+
+.destination-name {
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.remove-btn {
+  background: transparent;
+  border: none;
+  border-radius: 999px;
+  padding: 0.25rem;
+}
+
+.remove-icon {
+  color: var(--tone-delete);
+  font-size: 1.25rem;
+}
+
+.song-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-offset);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+}
+
+.song-main .song-title {
+  font-weight: 600;
+  color: var(--color-fg);
+  margin: 0;
+}
+
+.song-main .song-artist {
+  margin: 0;
+  color: var(--color-fg-offset);
+  font-size: 0.9rem;
+}
+
+.song-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.song-duration {
+  color: var(--color-fg-offset);
+}
+
+.btn-danger {
+  background: rgba(255, 0, 0, 0.06);
+  color: var(--tone-delete);
+  border: none;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+}
+
+.wide {
+  width: 100%;
 }
 
 /* Toast Notification grouped styles */

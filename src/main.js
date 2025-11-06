@@ -1,6 +1,5 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-// Import global Tailwind + app styles
-import './index.css'
+// Global styles have been migrated into App.vue
 
 createApp(App).mount('#app')
