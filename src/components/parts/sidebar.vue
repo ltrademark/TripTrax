@@ -1,11 +1,18 @@
 <template>
   <div id="sidebar" class="sidebar">
+    <!-- 
+      Toast is now handled by App.vue
+    -->
 
     <header class="sidebar-header">
       <div class="branding-wrap">
         <Icon name="logo_full" />
       </div>
-      <button class="sidebar-header--btn" aria-label="collapse" @click="toggleCollapse('sidebar')">
+      <button
+        class="sidebar-header--btn"
+        aria-label="collapse"
+        @click="toggleSidebar"
+      >
         <Icon name="Arrow-Left" class="icon" />
       </button>
     </header>
@@ -15,27 +22,42 @@
       <div class="section">
         <div class="section-header" @click="toggleCollapse('trip')">
           <h2 class="section-title">Trip</h2>
-          <Icon ref="tripChevron" name="Chevron-up" :class="{ 'is-collapsed': collapseTrips }" />
+          <Icon
+            name="Chevron-up"
+            :class="{ 'is-collapsed': collapseTrips }"
+          />
         </div>
         <!-- Trip Collapsed Summary -->
-        <div v-if="collapseTrips && destinations.length > 0" class="collapsed-summary">
-           <p class="summary-row">
-              <Icon name="Checkmark" class="start-icon" />
-              <span class="summary-text">{{ tripStartLocation }}</span>
-            </p>
-            <p class="summary-row">
-              <Icon name="Close" class="end-icon" />
-              <span class="summary-text">{{ tripEndLocation }}</span>
-            </p>
-            <p class="summary-indent"><span class="summary-stops">{{ tripStopsText }}</span></p>
-            <p class="summary-indent"><span class="summary-duration">Duration: {{ formattedTripTime }}</span></p>
+        <div v-if="collapseTrips" class="collapsed-summary">
+          <p class="summary-row">
+            <Icon name="Checkmark" class="start-icon" />
+            <span class="summary-text">{{ tripStartLocation }}</span>
+          </p>
+          <p class="summary-row">
+            <Icon name="Close" class="end-icon" />
+            <span class="summary-text">{{ tripEndLocation }}</span>
+          </p>
+          <p class="summary-indent">
+            <span class="summary-stops">{{ tripStopsText }}</span>
+          </p>
+          <p class="summary-indent">
+            <span class="summary-duration">Duration: {{ formattedTripTime }}</span>
+          </p>
         </div>
 
-        <div v-if="!collapseTrips" class="collapsible-content">
+        <div v-show="!collapseTrips" class="collapsible-content">
           <div class="search-wrap">
             <Icon name="Search" class="search-icon" />
-            <input v-model="destinationQuery" type="text" placeholder="Add Destination" class="search-input">
-            <div v-if="destSearchResults.length > 0" class="autocomplete-results">
+            <input
+              v-model="destinationQuery"
+              type="text"
+              placeholder="Add Destination"
+              class="search-input"
+            />
+            <div
+              v-if="destSearchResults.length > 0"
+              class="autocomplete-results"
+            >
               <ul>
                 <li
                   v-for="(result, index) in destSearchResults"
@@ -48,25 +70,31 @@
               </ul>
             </div>
           </div>
-          
-          <ul id="destination-list" class="destination-list">
+          <ul class="destination-list">
             <li
               v-for="(dest, index) in destinations"
               :key="index"
               class="destination-list-item"
-              :class="{ 'is-start': index === 0, 'is-end': index === destinations.length - 1 && destinations.length > 1 }"
+              :class="{
+                'is-start': index === 0,
+                'is-end': index === destinations.length - 1 && destinations.length > 1,
+              }"
             >
               <div class="destination-main">
                 <span class="destination-name">{{ dest.name }}</span>
               </div>
-              <button @click="removeDestination(index)" class="remove-btn" aria-label="remove">
+              <button
+                @click="removeDestination(index)"
+                class="remove-btn"
+                aria-label="remove"
+              >
                 <Icon name="Close" class="remove-icon" />
               </button>
             </li>
           </ul>
-          
           <div v-if="destinations.length >= 2" class="trip-summary">
-            Total Trip duration <span class="trip-duration-pill">{{ formattedTripTime }}</span>
+            Total Trip duration
+            <span class="trip-duration-pill">{{ formattedTripTime }}</span>
           </div>
         </div>
       </div>
@@ -76,6 +104,7 @@
         <div class="section-header">
           <h2 class="section-title">Source</h2>
         </div>
+
         <div id="source-content">
           <p class="muted">Connect a music source to search for tracks.</p>
           <div class="auth-row">
@@ -108,16 +137,24 @@
       <div class="section">
         <div class="section-header" @click="toggleCollapse('trax')">
           <h2 class="section-title">Trax</h2>
-          <Icon name="Chevron-up" :class="{ 'is-collapsed': collapseTrax }" />
+          <Icon
+            name="Chevron-up"
+            :class="{ 'is-collapsed': collapseTrax }"
+          />
         </div>
 
         <!-- Trax Collapsed Summary -->
-        <div v-if="collapseTrax && songs.length > 0" class="collapsed-summary">
-          <p><span class="summary-text">{{ songs.length }} song{{ songs.length > 1 ? 's' : '' }}</span></p>
-          <p>Remaining: <span class="remaining-time" :class="remainingTimeClass">{{ formattedRemainingTime }}</span></p>
+        <div v-if="collapseTrax" class="collapsed-summary">
+          <p>
+            <span class="summary-text">{{ songs.length }} song{{ songs.length !== 1 ? 's' : '' }}</span>
+          </p>
+          <p>
+            Remaining:
+            <span class="remaining-time" :class="remainingTimeClass">{{ formattedRemainingTime }}</span>
+          </p>
         </div>
 
-        <div v-if="!collapseTrax" class="collapsible-content">
+        <div v-show="!collapseTrax" class="collapsible-content">
           <div class="search-wrap">
             <Icon name="Search" class="search-icon" />
             <input
@@ -126,9 +163,12 @@
               :placeholder="songSearchPlaceholder"
               class="search-input"
               :disabled="!activeSource"
+            />
+            <div
+              v-if="songSearchResults.length > 0"
+              class="autocomplete-results"
             >
-            <div v-if="songSearchResults.length > 0" class="autocomplete-results">
-               <ul>
+              <ul>
                 <li
                   v-for="(song, index) in songSearchResults"
                   :key="index"
@@ -141,8 +181,7 @@
               </ul>
             </div>
           </div>
-          
-          <ul id="song-list" class="song-list">
+          <ul class="song-list">
             <li
               v-for="(song, index) in songs"
               :key="index"
@@ -153,31 +192,49 @@
                 <p class="song-artist">{{ song.artist }}</p>
               </div>
               <div class="song-meta">
-                <span class="song-duration">{{ formatDuration(song.duration) }}</span>
-                <button @click="removeSong(index)" class="remove-btn" aria-label="remove-song">
+                <span class="song-duration">{{
+                  formatDuration(song.duration)
+                }}</span>
+                <button
+                  @click="removeSong(index)"
+                  class="remove-btn"
+                  aria-label="remove-song"
+                >
                   <Icon name="Close" class="remove-icon" />
                 </button>
               </div>
             </li>
           </ul>
           <div v-if="songs.length > 0" class="trax-summary">
-            Remaining Time <span class="remaining-time" :class="remainingTimeClass">{{ formattedRemainingTime }}</span>
+            Remaining Time
+            <span class="remaining-time" :class="remainingTimeClass">{{ formattedRemainingTime }}</span>
           </div>
         </div>
       </div>
 
       <!-- Playlist Creation Section -->
       <div v-if="songs.length > 0" class="playlist-creator">
-        <input v-model="playlistName" type="text" placeholder="Playlist Name" class="search-input">
-        <button @click="createPlaylist" :disabled="!isPlaylistCreatable" class="btn-primary wide">
+        <input
+          v-model="playlistName"
+          type="text"
+          id="playlist-name"
+          placeholder="Playlist Name"
+          class="search-input"
+        />
+        <button
+          id="create-playlist-btn"
+          class="btn-primary wide"
+          @click="createPlaylist"
+          :disabled="!isPlaylistCreatable"
+        >
           Create Playlist
         </button>
       </div>
-
-    </div> <!-- /flex-grow -->
+    </div>
+    <!-- /flex-grow -->
 
     <footer class="app-footer">
-      <button @click="signout" class="btn-danger wide">
+      <button class="btn-danger wide" @click="signout">
         Sign Out & Restart
       </button>
       <p class="footer-note">© 2025 TripTrax. All rights reserved.</p>
@@ -186,7 +243,7 @@
 </template>
 
 <script>
-import Icon from '../Icon.vue'
+import Icon from '../Icon.vue'; // Adjusted path
 
 export default {
   name: 'Sidebar',
@@ -194,37 +251,33 @@ export default {
   props: {
     totalTripTime: {
       type: Number,
-      default: 0
-    }
+      default: 0,
+    },
   },
-  emits: ['update:destinations', 'toggle-sidebar'],
-  
+  emits: ['update:destinations', 'toggle-sidebar', 'show-toast'],
+
   data() {
     return {
       // Collapse state
       collapseTrips: false,
       collapseTrax: false,
       collapseSidebar: false,
-      
+
       // Trip Data
       destinationQuery: '',
       destSearchResults: [],
       searchDebounce: null,
-      destinations: [], // { name: 'City, ST', lat: 123, lng: 123 }
+      destinations: [],
 
       // Trax Data
-      songs: [], // { title: 'Song', artist: 'Artist', duration: 180 (seconds) }
+      songs: [],
       activeSource: null,
       songQuery: '',
       songSearchDebounce: null,
       songSearchResults: [],
-      
+
       // Other State
       playlistName: '',
-      messageVisible: false,
-      messageType: 'info',
-      messageText: '',
-      messageTimer: null,
 
       mockSongs: [
         { title: 'Take Me Home, Country Roads', artist: 'John Denver', duration: 188 },
@@ -234,17 +287,18 @@ export default {
         { title: 'Running on Empty', artist: 'Jackson Browne', duration: 299 },
         { title: 'Life is a Highway', artist: 'Tom Cochrane', duration: 266 },
         { title: 'Here I Go Again', artist: 'Whitesnake', duration: 275 },
-      ]
-    }
+      ],
+    };
   },
 
   computed: {
-    // --- Trip Computeds ---
     tripStartLocation() {
       return this.destinations.length > 0 ? this.destinations[0].name : 'None';
     },
     tripEndLocation() {
-      return this.destinations.length > 1 ? this.destinations[this.destinations.length - 1].name : '...';
+      return this.destinations.length > 1
+        ? this.destinations[this.destinations.length - 1].name
+        : '...';
     },
     tripStopsText() {
       const stops = this.destinations.length - 2;
@@ -255,19 +309,18 @@ export default {
     formattedTripTime() {
       return this.formatTime(this.totalTripTime);
     },
-
-    // --- Trax Computeds ---
     songSearchPlaceholder() {
       if (!this.activeSource) {
         return 'Connect a source first...';
       }
-      return `Search ${this.activeSource.charAt(0).toUpperCase() + this.activeSource.slice(1)}...`;
+      return `Search ${
+        this.activeSource.charAt(0).toUpperCase() + this.activeSource.slice(1)
+      }...`;
     },
     totalSongTime() {
       return this.songs.reduce((acc, song) => acc + song.duration, 0);
     },
     remainingTime() {
-      // Use the prop passed from App.vue
       return this.totalTripTime - this.totalSongTime;
     },
     formattedRemainingTime() {
@@ -277,15 +330,17 @@ export default {
       if (this.remainingTime < 0) {
         return 'danger';
       }
-      // Check if trip time is valid before calculating percentage
-      if (this.totalTripTime > 0 && this.remainingTime < (this.totalTripTime * 0.1)) {
+      if (
+        this.totalTripTime > 0 &&
+        this.remainingTime < this.totalTripTime * 0.1
+      ) {
         return 'success';
       }
-      return 'remaining-time'; // default class
+      return 'remaining-time';
     },
     isPlaylistCreatable() {
       return this.activeSource && this.songs.length > 0 && this.playlistName.length > 0;
-    }
+    },
   },
 
   watch: {
@@ -299,15 +354,12 @@ export default {
         this.searchNominatim(query);
       }, 300);
     },
-    
     destinations: {
       handler() {
-        // Emit changes to parent (App.vue)
         this.$emit('update:destinations', this.destinations);
       },
-      deep: true 
+      deep: true,
     },
-    
     songQuery(query) {
       this.songSearchResults = [];
       if (query.length < 3 || !this.activeSource) {
@@ -323,44 +375,66 @@ export default {
   methods: {
     // --- Trip Methods ---
     async searchNominatim(query) {
-      const endpoint = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
+      const endpoint = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        query
+      )}&format=json&addressdetails=1&limit=5`;
       try {
-        const response = await fetch(endpoint, { headers: { 'Accept-Language': 'en' } });
+        const response = await fetch(endpoint, {
+          headers: { 'Accept-Language': 'en' },
+        });
         const data = await response.json();
-        this.destSearchResults = data; 
+        this.destSearchResults = data;
       } catch (error) {
         console.error('Error fetching from Nominatim:', error);
-        this.$emit('show-toast', { message: 'Error searching for location.', type: 'error' });
+        this.$emit('show-toast', {
+          message: 'Error searching for location.',
+          type: 'error',
+        });
       }
     },
-    
+
     selectDestination(result) {
+      // This is the key: we explicitly use the 'result' object
       this.addDestination(result.display_name, result.lat, result.lon);
+      
+      // Then we clear the query and results
       this.destinationQuery = '';
       this.destSearchResults = [];
     },
 
     addDestination(name, lat, lon) {
+      // This method uses the 'name' passed from 'selectDestination'
       const simpleName = name.split(',')[0];
-      this.destinations.push({ name: simpleName, lat: parseFloat(lat), lng: parseFloat(lon) });
-      this.$emit('show-toast', { message: `Added ${simpleName} to trip!`, type: 'success' });
-      this.collapseTrips = false; // Ensure open
+      this.destinations.push({
+        name: simpleName,
+        lat: parseFloat(lat),
+        lng: parseFloat(lon),
+      });
+      this.$emit('show-toast', {
+        message: `Added ${simpleName} to trip!`,
+        type: 'success',
+      });
+      this.collapseTrips = false;
     },
 
     removeDestination(index) {
       const removed = this.destinations.splice(index, 1);
-      this.$emit('show-toast', { message: `Removed ${removed[0].name}.`, type: 'info' });
+      this.$emit('show-toast', {
+        message: `Removed ${removed[0].name}.`,
+        type: 'info',
+      });
     },
 
     // --- Trax Methods ---
     searchSongs(query) {
       const lowerQuery = query.toLowerCase();
-      this.songSearchResults = this.mockSongs.filter(song => 
-        song.title.toLowerCase().includes(lowerQuery) ||
-        song.artist.toLowerCase().includes(lowerQuery)
+      this.songSearchResults = this.mockSongs.filter(
+        (song) =>
+          song.title.toLowerCase().includes(lowerQuery) ||
+          song.artist.toLowerCase().includes(lowerQuery)
       );
     },
-    
+
     selectSong(song) {
       this.addSong(song);
       this.songQuery = '';
@@ -369,65 +443,79 @@ export default {
 
     addSong(song) {
       this.songs.push(song);
-      this.$emit('show-toast', { message: `Added ${song.title}!`, type: 'success' });
+      this.$emit('show-toast', {
+        message: `Added ${song.title}!`,
+        type: 'success',
+      });
     },
-    
+
     removeSong(index) {
       const removed = this.songs.splice(index, 1);
-      this.$emit('show-toast', { message: `Removed ${removed[0].title}.`, type: 'info' });
+      this.$emit('show-toast', {
+        message: `Removed ${removed[0].title}.`,
+        type: 'info',
+      });
     },
 
     // --- Source Methods ---
     selectSource(source) {
       if (this.activeSource === source) {
-        this.activeSource = null; // Toggle off
+        this.activeSource = null;
       } else {
         this.activeSource = source;
-        this.$emit('show-toast', { message: `Connected to ${source}! You can now search for songs.`, type: 'success' });
-        this.collapseTrax = false; // Open trax section
+        this.$emit('show-toast', {
+          message: `Connected to ${source}! You can now search for songs.`,
+          type: 'success',
+        });
+        this.collapseTrax = false;
       }
     },
 
     // --- General UI Methods ---
     toggleCollapse(section) {
-      switch(section) {
+      switch (section) {
         case 'trip':
           this.collapseTrips = !this.collapseTrips;
           break;
         case 'trax':
           this.collapseTrax = !this.collapseTrax;
           break;
-        case 'sidebar':
-          this.collapseSidebar = !this.collapseSidebar;
-          this.$emit('toggle-sidebar'); // Let parent know
-          break;
       }
     },
-    
+
+    toggleSidebar() {
+      this.collapseSidebar = !this.collapseSidebar;
+      this.$emit('toggle-sidebar', this.collapseSidebar);
+    },
+
     // --- Playlist & Signout ---
     createPlaylist() {
       if (!this.isPlaylistCreatable) return;
-      
-      console.log(`Creating playlist "${this.playlistName}" on ${this.activeSource} with ${this.songs.length} songs.`);
-      this.$emit('show-toast', { message: `Successfully created playlist "${this.playlistName}"!`, type: 'success' });
 
-      // Reset
+      console.log(
+        `Creating playlist "${this.playlistName}" on ${this.activeSource} with ${this.songs.length} songs.`
+      );
+      this.$emit('show-toast', {
+        message: `Successfully created playlist "${this.playlistName}"!`,
+        type: 'success',
+      });
+
       this.songs = [];
       this.playlistName = '';
     },
-    
+
     signout() {
-      // Reset state
       this.destinations = [];
       this.songs = [];
       this.activeSource = null;
       this.playlistName = '';
-      
-      // Reset UI
       this.collapseTrips = false;
       this.collapseTrax = false;
-      
-      this.$emit('show-toast', { message: 'Signed out and reset applicaton.', type: 'info' });
+
+      this.$emit('show-toast', {
+        message: 'Signed out and reset applicaton.',
+        type: 'info',
+      });
     },
 
     // --- Utilities ---
@@ -435,31 +523,19 @@ export default {
       if (seconds < 0) seconds = 0;
       const h = Math.floor(seconds / 3600);
       const m = Math.floor((seconds % 3600) / 60);
-      return `${h} hour${h !== 1 ? 's' : ''} ${m} Minute${m !== 1 ? 's' : ''}`;
+      return `${h}h ${m}m`;
     },
-    
+
     formatDuration(seconds) {
       const m = Math.floor(seconds / 60);
       const s = seconds % 60;
       return `${m}:${s.toString().padStart(2, '0')}`;
     },
-    
-    showMessage(message, type = 'info') {
-      this.messageText = message;
-      this.messageType = type;
-      this.messageVisible = true;
-
-      clearTimeout(this.messageTimer);
-      this.messageTimer = setTimeout(() => {
-        this.messageVisible = false;
-      }, 3000);
-    },
-  }
-}
+  },
+};
 </script>
 
 <style>
-/* --- Sidebar Styles --- */
 @import '../../corevar.css';
 
 #sidebar {
