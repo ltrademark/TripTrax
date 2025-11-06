@@ -226,7 +226,6 @@ export default {
   },
 
   computed: {
-    // ... existing computed ...
     songSearchResults() {
       if (this.songQuery.length < 2) return [];
       
