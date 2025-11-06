@@ -1,149 +1,9 @@
 <template>
   <div>
-    <!-- Toast -->
-    <div id="message-box" class="hidden px-4 py-3 rounded-lg text-white font-medium">
-      <span id="message-text"></span>
-    </div>
-
-    <!-- Sidebar -->
-    <div id="sidebar" class="sidebar">
-      <header class="sidebar-header">
-        <div class="branding-wrap">
-          <Icon name="logo_full" />
-        </div>
-        <button class="sidebar-header--btn" aria-label="collapse">
-          <Icon name="Arrow-Left" class="icon" />
-        </button>
-      </header>
-
-      <div class="sidebar-content">
-        <!-- Trip Section -->
-        <div class="section">
-          <div class="section-header" @click="toggleCollapse('trip')">
-            <h2 class="section-title">Trip</h2>
-            <Icon ref="tripChevron" name="Chevron-up" :class="{ 'is-collapsed': collapseTrips }" />
-          </div>
-          <!-- Trip Collapsed Summary -->
-          <div v-if="collapseTrips" class="collapsed-summary">
-            <p class="summary-row">
-              <Icon name="Checkmark" class="start-icon" />
-              <span id="summary-trip-start" class="summary-text"></span>
-            </p>
-            <p class="summary-row">
-              <Icon name="Close" class="end-icon" />
-              <span id="summary-trip-end" class="summary-text"></span>
-            </p>
-            <p class="summary-indent"><span id="summary-trip-stops" class="summary-stops"></span></p>
-            <p class="summary-indent"><span id="summary-trip-duration" class="summary-duration"></span></p>
-          </div>
-
-          <div v-if="!collapseTrips" class="collapsible-content">
-            <div class="search-wrap">
-              <Icon name="Search" class="search-icon" />
-              <!-- USE V-MODEL and remove ID -->
-              <input v-model="destinationQuery" type="text" placeholder="Add Destination" class="search-input">
-
-              <!-- AUTOCOMPLETE: Rendered with v-for -->
-              <div v-if="destSearchResults.length > 0" class="autocomplete-results">
-                <ul>
-                  <li v-for="(result, index) in destSearchResults" :key="index" class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100" @mousedown="selectDestination(result)">
-                    {{ result.display_name }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <!-- DESTINATION LIST: Rendered with v-for -->
-            <ul id="destination-list" class="destination-list">
-              <li v-if="destinations.length === 0" class="text-sm text-gray-400 text-center py-2">
-                Add a start and end point
-              </li>
-              <li v-for="(dest, index) in destinations" :key="index" class="destination-list-item" :class="{ 'is-start': index === 0, 'is-end': index === destinations.length - 1 && destinations.length > 1 }">
-                <div class="destination-main">
-                  <span class="destination-name">{{ dest.name }}</span>
-                </div>
-                <!-- Pass index to removeDestination -->
-                <button @click="removeDestination(index)" class="remove-btn" aria-label="remove">
-                  <Icon name="Close" class="remove-icon" />
-                </button>
-              </li>
-            </ul>
-
-            <div id="trip-summary" class="trip-summary">
-              Total Trip duration <span id="trip-duration" class="trip-duration-pill">0 hours 0 Minutes</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Source Section -->
-        <div class="section">
-          <div class="section-header">
-            <h2 class="section-title">Source</h2>
-          </div>
-
-          <div id="source-content">
-            <p class="muted">Connect a music source to search for tracks.</p>
-            <div class="auth-row">
-              <button id="auth-spotify" onclick="mockAuth('spotify')" class="auth-btn auth-spotify">
-                <Icon name="Spotify" class="logo" />
-              </button>
-              <button id="auth-apple" onclick="mockAuth('apple')" class="auth-btn auth-apple">
-                <Icon name="AppleMusic" class="logo" />
-              </button>
-              <button id="auth-youtube" onclick="mockAuth('youtube')" class="auth-btn auth-youtube">
-                <Icon name="YouTube" class="logo" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Trax Section -->
-        <div class="section">
-          <div class="section-header" @click="toggleCollapse('trax')">
-            <h2 class="section-title">Trax</h2>
-            <Icon name="Chevron-up" :class="{ 'is-collapsed': collapseTrax }" />
-          </div>
-
-          <div v-if="collapseTrax" class="collapsed-summary">
-            <p><span id="summary-trax-count" class="summary-text"></span></p>
-            <p>Remaining: <span id="summary-trax-remaining" class="remaining-time"></span></p>
-          </div>
-
-          <div v-if="!collapseTrax" class="collapsible-content">
-            <div class="search-wrap">
-              <Icon name="Search" class="search-icon" />
-              <input type="text" id="song-input" placeholder="Connect a source first..." class="search-input" disabled>
-              <div id="song-results" class="autocomplete-results">
-                <!-- Song results here -->
-              </div>
-            </div>
-            <ul id="song-list" class="song-list">
-              <!-- Songs will be added here -->
-            </ul>
-            <div id="trax-summary" class="trax-summary">
-              Remaining Time <span id="playlist-remaining" class="remaining-time">0 hours 0 Minutes</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Playlist Creation Section -->
-        <div id="playlist-creator" class="playlist-creator">
-          <input type="text" id="playlist-name" placeholder="Playlist Name" class="search-input">
-          <button id="create-playlist-btn" class="btn-primary wide" onclick="createPlaylist()">
-            Create Playlist
-          </button>
-        </div>
-
-      </div> <!-- /flex-grow -->
-
-      <footer class="app-footer">
-        <button class="btn-danger wide" onclick="signout()">
-          Sign Out & Restart
-        </button>
-        <p class="footer-note">© 2025 TripTrax. All rights reserved.</p>
-      </footer>
-    </div>
-
+    <Sidebar 
+      @update:destinations="onDestinationsChange" 
+      :total-trip-time="totalTripTime"
+    />
     <!-- Map Container -->
     <div id="map" style="height:100vh;width:100%;z-index:10"></div>
   </div>
@@ -151,12 +11,12 @@
 
 <script>
 import Icon from './components/Icon.vue'
-// import CloseIcon from './Icons/Close.svg?raw' // No longer needed if Icon component works for "Close"
+import Sidebar from './components/parts/sidebar.vue' 
 import L from 'leaflet'
 
 export default {
   name: 'App',
-  components: { Icon },
+  components: { Sidebar, Icon },
   
   data() {
     return {
@@ -287,9 +147,6 @@ export default {
       this.destSearchResults = [];
     },
 
-    // renderDestinationResults() { ... REMOVED ... },
-    // renderSongResults() { ... REMOVED ... },
-
     addDestination(name, lat, lon) {
       const simpleName = name.split(',')[0];
       // Just push to the data array. Watcher will handle the rest.
@@ -317,10 +174,10 @@ export default {
       updateDurations();
       showMessage(`Removed ${removed[0].title}.`, 'info');
     },
-
-    // renderDestinations() { ... REMOVED ... },
-    // renderSongs() { ... (will be refactored next) ... },
-
+    onDestinationsChange(newDestinations) {
+      this.destinations = newDestinations;
+      this.updateRoute();
+    },
     updateRoute() {
       if (this.destinations.length < 2) {
         this.routingControl.setWaypoints([]);
