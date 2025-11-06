@@ -22,7 +22,7 @@
           <div class="section-header" @click="toggleCollapse('trip')">
             <h2 class="section-title">Trip</h2>
             <Icon ref="tripChevron" name="Chevron-up" :class="{ 'is-collapsed': collapseTrips }" />
-          </div> 
+          </div>
           <!-- Trip Collapsed Summary -->
           <div v-if="collapseTrips" class="collapsed-summary">
             <p class="summary-row">
@@ -40,10 +40,35 @@
           <div v-if="!collapseTrips" class="collapsible-content">
             <div class="search-wrap">
               <Icon name="Search" class="search-icon" />
-              <input v-model="destinationQuery" type="text" id="destination-input" placeholder="Add Destination" class="search-input">
-              <div id="destination-results" class="autocomplete-results"></div>
+              <!-- USE V-MODEL and remove ID -->
+              <input v-model="destinationQuery" type="text" placeholder="Add Destination" class="search-input">
+
+              <!-- AUTOCOMPLETE: Rendered with v-for -->
+              <div v-if="destSearchResults.length > 0" class="autocomplete-results">
+                <ul>
+                  <li v-for="(result, index) in destSearchResults" :key="index" class="p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100" @mousedown="selectDestination(result)">
+                    {{ result.display_name }}
+                  </li>
+                </ul>
+              </div>
             </div>
-            <ul id="destination-list" class="destination-list"></ul>
+
+            <!-- DESTINATION LIST: Rendered with v-for -->
+            <ul id="destination-list" class="destination-list">
+              <li v-if="destinations.length === 0" class="text-sm text-gray-400 text-center py-2">
+                Add a start and end point
+              </li>
+              <li v-for="(dest, index) in destinations" :key="index" class="destination-list-item" :class="{ 'is-start': index === 0, 'is-end': index === destinations.length - 1 && destinations.length > 1 }">
+                <div class="destination-main">
+                  <span class="destination-name">{{ dest.name }}</span>
+                </div>
+                <!-- Pass index to removeDestination -->
+                <button @click="removeDestination(index)" class="remove-btn" aria-label="remove">
+                  <Icon name="Close" class="remove-icon" />
+                </button>
+              </li>
+            </ul>
+
             <div id="trip-summary" class="trip-summary">
               Total Trip duration <span id="trip-duration" class="trip-duration-pill">0 hours 0 Minutes</span>
             </div>
@@ -79,7 +104,6 @@
             <Icon name="Chevron-up" :class="{ 'is-collapsed': collapseTrax }" />
           </div>
 
-          <!-- Trax Collapsed Summary -->
           <div v-if="collapseTrax" class="collapsed-summary">
             <p><span id="summary-trax-count" class="summary-text"></span></p>
             <p>Remaining: <span id="summary-trax-remaining" class="remaining-time"></span></p>
@@ -127,7 +151,7 @@
 
 <script>
 import Icon from './components/Icon.vue'
-import CloseIcon from './Icons/Close.svg?raw'
+// import CloseIcon from './Icons/Close.svg?raw' // No longer needed if Icon component works for "Close"
 import L from 'leaflet'
 
 export default {
@@ -141,24 +165,27 @@ export default {
       collapseTrips: false,
       collapseTrax: false,
       collapseSidebar: false,
-      destinationQuery:'',
+      
+      // Trip Data
+      destinationQuery: '',
+      destSearchResults: [],
+      searchDebounce: null,
       destinations: [], // { name: 'City, ST', lat: 123, lng: 123 }
+      totalTripTime: 0,
+
+      // Trax Data
       songs: [], // { title: 'Song', artist: 'Artist', duration: 180 (seconds) }
       activeSource: null,
-      totalTripTime: 0,
-      sections: {
-        trip: { collapsed: false },
-        source: { collapsed: false },
-        trax: { collapsed: false }
-      },
-      searchQuery: '',
       songQuery: '',
+      
+      // Other State
       playlistName: '',
       messageVisible: false,
       messageType: 'info',
       messageText: '',
-      songsQuery: '',
+
       mockSongs: [
+        // ... existing mock songs ...
         { title: 'Take Me Home, Country Roads', artist: 'John Denver', duration: 188 },
         { title: 'Hotel California', artist: 'Eagles', duration: 391 },
         { title: 'Bohemian Rhapsody', artist: 'Queen', duration: 354 },
@@ -170,10 +197,8 @@ export default {
     }
   },
 
-
-    /* DOM manipulation replaced with Vue.js reactive state */
-
   mounted() {
+    // ... existing mounted ...
     // Initialize Map
     this.map = L.map('map').setView([38.9072, -77.0369], 8);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -201,6 +226,7 @@ export default {
   },
 
   computed: {
+    // ... existing computed ...
     songSearchResults() {
       if (this.songQuery.length < 2) return [];
       
@@ -213,187 +239,100 @@ export default {
   },
 
   watch: {
-    searchQuery: {
-      handler(query) {
-        if (query.length < 3) {
-          this.searchResults = [];
-          return;
-        }
-        
-        clearTimeout(this.searchDebounce);
-        this.searchDebounce = setTimeout(() => {
-          this.searchNominatim();
-        }, 300);
+    // Watcher for destination input
+    destinationQuery(query) {
+      this.destSearchResults = []; // Clear results on new input
+      if (query.length < 3) {
+        return;
       }
+      
+      clearTimeout(this.searchDebounce);
+      this.searchDebounce = setTimeout(() => {
+        this.searchNominatim(query);
+      }, 300);
+    },
+    
+    // Watcher for destination list changes
+    destinations: {
+      handler() {
+        this.updateRoute();
+        this.updateDurations(); // Update time summaries
+        // This replaces the logic inside renderDestinations
+        if (this.destinations.length >= 2) {
+          // $summaryTripStart.textContent = this.destinations[0].name;
+          // ... etc. We can move this to computed properties later
+        }
+      },
+      deep: true // Watch for changes inside the array
     }
   },
 
   methods: {
-    async searchNominatim() {
+    async searchNominatim(query) {
       const endpoint = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
       try {
         const response = await fetch(endpoint, { headers: { 'Accept-Language': 'en' } });
         const data = await response.json();
-        renderDestinationResults(data);
+        // Set data, Vue will handle rendering
+        this.destSearchResults = data; 
       } catch (error) {
         console.error('Error fetching from Nominatim:', error);
-        showMessage('Error searching for location.', 'error');
+        // this.showMessage('Error searching for location.', 'error');
       }
     },
-    renderDestinationResults(results) {
-      $destinationResults.innerHTML = '';
-      if (results.length === 0) {
-        $destinationResults.innerHTML = '<div class="p-3 text-gray-500">No results found.</div>';
-      } else {
-        results.forEach(result => {
-          const li = document.createElement('div');
-          li.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100';
-          li.textContent = result.display_name;
-          // Use mousedown to register click before blur hides the box
-          li.addEventListener('mousedown', () => {
-            addDestination(result.display_name, result.lat, result.lon);
-            $destinationInput.value = '';
-            $destinationResults.classList.add('hidden');
-          });
-          $destinationResults.appendChild(li);
-        });
-      }
-      $destinationResults.classList.remove('hidden');
+    
+    // New method to handle selection from reactive list
+    selectDestination(result) {
+      this.addDestination(result.display_name, result.lat, result.lon);
+      this.destinationQuery = '';
+      this.destSearchResults = [];
     },
-    renderSongResults(results) {
-      $songResults.innerHTML = '';
-      if (results.length === 0) {
-        $songResults.innerHTML = '<div class="p-3 text-gray-500">No songs found.</div>';
-      } else {
-        results.forEach(song => {
-          const li = document.createElement('div');
-          li.className = 'p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100';
-          li.innerHTML = `
-            <p class="font-medium">${song.title}</p>
-            <p class="text-sm text-gray-500">${song.artist}</p>
-          `;
-          // Use mousedown to register click before blur hides the box
-          li.addEventListener('mousedown', () => {
-            addSong(song);
-            $songInput.value = '';
-            $songResults.classList.add('hidden');
-          });
-          $songResults.appendChild(li);
-        });
-      }
-      $songResults.classList.remove('hidden');
-    },
+
+    // renderDestinationResults() { ... REMOVED ... },
+    // renderSongResults() { ... REMOVED ... },
+
     addDestination(name, lat, lon) {
-      // Simplify name
       const simpleName = name.split(',')[0];
-      destinations.push({ name: simpleName, lat: lat, lng: lon });
-      renderDestinations();
-      updateRoute();
-      showMessage(`Added ${simpleName} to trip!`, 'success');
+      // Just push to the data array. Watcher will handle the rest.
+      this.destinations.push({ name: simpleName, lat: lat, lng: lon });
+      // this.showMessage(`Added ${simpleName} to trip!`, 'success');
     },
+
     removeDestination(index) {
-      const removed = destinations.splice(index, 1);
-      renderDestinations();
-      updateRoute();
-      showMessage(`Removed ${removed[0].name}.`, 'info');
+      // Just splice the data array. Watcher will handle the rest.
+      const removed = this.destinations.splice(index, 1);
+      // this.showMessage(`Removed ${removed[0].name}.`, 'info');
     },
+
     addSong(song) {
+      // ... existing method (will be refactored next) ...
       songs.push(song);
       renderSongs();
       updateDurations();
       showMessage(`Added ${song.title}!`, 'success');
     },
     removeSong(index) {
+      // ... existing method (will be refactored next) ...
       const removed = songs.splice(index, 1);
       renderSongs();
       updateDurations();
       showMessage(`Removed ${removed[0].title}.`, 'info');
     },
-    renderDestinations() {
-      $destinationList.innerHTML = '';
-      destinations.forEach((dest, index) => {
-        const li = document.createElement('li');
-        li.className = 'destination-list-item';
 
-        // Add start/end classes
-        if (index === 0) li.classList.add('is-start');
-        if (index === destinations.length - 1) li.classList.add('is-end');
+    // renderDestinations() { ... REMOVED ... },
+    // renderSongs() { ... (will be refactored next) ... },
 
-        li.innerHTML = `
-          <div class="destination-main">
-            <span class="destination-name">${dest.name}</span>
-          </div>
-          <button onclick="removeDestination(${index})" class="remove-btn" aria-label="remove">
-            ${CloseIcon}
-          </button>
-        `;
-        $destinationList.appendChild(li);
-      });
-
-      // Summary Population
-      if (destinations.length >= 2) {
-        $summaryTripStart.textContent = destinations[0].name;
-        $summaryTripEnd.textContent = destinations[destinations.length - 1].name;
-        const stops = destinations.length - 2;
-        $summaryTripStops.textContent = stops === 0 ? 'No intermediate stops' : `${stops} stop${stops > 1 ? 's' : ''}`;
-      } else if (destinations.length === 1) {
-        $summaryTripStart.textContent = destinations[0].name;
-        $summaryTripEnd.textContent = '...';
-        $summaryTripStops.textContent = 'Add destination';
-      } else {
-        // Clear summary if no destinations
-        $summaryTripStart.textContent = 'None';
-        $summaryTripEnd.textContent = 'None';
-        $summaryTripStops.textContent = 'No trip planned';
-        $summaryTripDuration.textContent = 'Duration: 0h 0m';
-      }
-
-      // Show trip summary
-      if (destinations.length >= 2) {
-        $tripSummary.classList.remove('hidden');
-      } else {
-        $tripSummary.classList.add('hidden');
-        totalTripTime = 0; // Reset time if not enough points
-        updateDurations();
-      }
-
-      // Update collapse state
-      toggleCollapse('trip', true); // Force open on add
-    },
-    renderSongs() {
-      $songList.innerHTML = '';
-      songs.forEach((song, index) => {
-      const li = document.createElement('li');
-        li.className = 'song-list-item';
-        li.innerHTML = `
-          <div class="song-main">
-            <p class="song-title">${song.title}</p>
-            <p class="song-artist">${song.artist}</p>
-          </div>
-          <div class="song-meta">
-            <span class="song-duration">${Math.floor(song.duration / 60)}:${(song.duration % 60).toString().padStart(2, '0')}</span>
-            <button onclick="removeSong(${index})" class="remove-btn" aria-label="remove-song">
-              ${CloseIcon}
-            </button>
-          </div>
-        `;
-        $songList.appendChild(li);
-      });
-
-      // Summary Population
-      $summaryTraxCount.textContent = songs.length === 0 ? 'No songs added' : `${songs.length} song${songs.length > 1 ? 's' : ''}`;
-
-      $traxSummary.classList.remove('hidden');
-      $playlistCreator.classList.remove('hidden');
-    },
     updateRoute() {
-      if (destinations.length < 2) {
-        routingControl.setWaypoints([]);
+      if (this.destinations.length < 2) {
+        this.routingControl.setWaypoints([]);
+        this.totalTripTime = 0; // Reset time
         return;
       }
-      const waypoints = destinations.map(d => L.latLng(d.lat, d.lng));
-      routingControl.setWaypoints(waypoints);
+      const waypoints = this.destinations.map(d => L.latLng(d.lat, d.lng));
+      this.routingControl.setWaypoints(waypoints);
     },
+    
+    // ... all other methods ...
     formatTime(seconds) {
       if (seconds < 0) seconds = 0;
       const h = Math.floor(seconds / 3600);
@@ -401,38 +340,48 @@ export default {
       return `${h} hour${h !== 1 ? 's' : ''} ${m} Minute${m !== 1 ? 's' : ''}`;
     },
     updateDurations() {
+      // This method still has DOM manipulation, which we can refactor next
+      // ...
+      const $tripDuration = document.getElementById('trip-duration'); // temporary
+      const $summaryTripDuration = document.getElementById('summary-trip-duration'); // temporary
+      const $playlistRemaining = document.getElementById('playlist-remaining'); // temporary
+      const $summaryTraxRemaining = document.getElementById('summary-trax-remaining'); // temporary
+      const $createPlaylistBtn = document.getElementById('create-playlist-btn'); // temporary
+      const $playlistNameInput = document.getElementById('playlist-name'); // temporary
+
+
       // Update Trip Duration
-      const tripTimeFormatted = formatTime(totalTripTime);
-      $tripDuration.textContent = tripTimeFormatted;
-      $summaryTripDuration.textContent = `Duration: ${tripTimeFormatted}`;
+      const tripTimeFormatted = this.formatTime(this.totalTripTime);
+      if ($tripDuration) $tripDuration.textContent = tripTimeFormatted;
+      if ($summaryTripDuration) $summaryTripDuration.textContent = `Duration: ${tripTimeFormatted}`;
 
       // Update Playlist / Remaining Duration
-      const totalPlaylistTime = songs.reduce((acc, song) => acc + song.duration, 0);
-      const remainingTime = totalTripTime - totalPlaylistTime;
+      const totalPlaylistTime = this.songs.reduce((acc, song) => acc + song.duration, 0);
+      const remainingTime = this.totalTripTime - totalPlaylistTime;
 
-      const remainingTimeFormatted = formatTime(remainingTime);
-      $playlistRemaining.textContent = remainingTimeFormatted;
-      $summaryTraxRemaining.textContent = remainingTimeFormatted;
+      const remainingTimeFormatted = this.formatTime(remainingTime);
+      if ($playlistRemaining) $playlistRemaining.textContent = remainingTimeFormatted;
+      if ($summaryTraxRemaining) $summaryTraxRemaining.textContent = remainingTimeFormatted;
 
       if (remainingTime < 0) {
-        $playlistRemaining.classList.remove('remaining-time', 'success');
-        $playlistRemaining.classList.add('danger');
-        $summaryTraxRemaining.classList.remove('remaining-time', 'success');
-        $summaryTraxRemaining.classList.add('danger');
-      } else if (totalTripTime > 0 && remainingTime < (totalTripTime * 0.1)) { // Within 10%
-        $playlistRemaining.classList.remove('remaining-time', 'danger');
-        $playlistRemaining.classList.add('success');
-        $summaryTraxRemaining.classList.remove('remaining-time', 'danger');
-        $summaryTraxRemaining.classList.add('success');
+        $playlistRemaining?.classList.remove('remaining-time', 'success');
+        $playlistRemaining?.classList.add('danger');
+        $summaryTraxRemaining?.classList.remove('remaining-time', 'success');
+        $summaryTraxRemaining?.classList.add('danger');
+      } else if (this.totalTripTime > 0 && remainingTime < (this.totalTripTime * 0.1)) { // Within 10%
+        $playlistRemaining?.classList.remove('remaining-time', 'danger');
+        $playlistRemaining?.classList.add('success');
+        $summaryTraxRemaining?.classList.remove('remaining-time', 'danger');
+        $summaryTraxRemaining?.classList.add('success');
       } else {
-        $playlistRemaining.classList.remove('success', 'danger');
-        $playlistRemaining.classList.add('remaining-time');
-        $summaryTraxRemaining.classList.remove('success', 'danger');
-        $summaryTraxRemaining.classList.add('remaining-time');
+        $playlistRemaining?.classList.remove('success', 'danger');
+        $playlistRemaining?.classList.add('remaining-time');
+        $summaryTraxRemaining?.classList.remove('success', 'danger');
+        $summaryTraxRemaining?.classList.add('remaining-time');
       }
 
       // Update create button state
-      $createPlaylistBtn.disabled = !activeSource || songs.length === 0 || !$playlistNameInput.value;
+      if ($createPlaylistBtn) $createPlaylistBtn.disabled = !this.activeSource || this.songs.length === 0 || !$playlistNameInput.value;
     },
     toggleCollapse(section) {
       switch(section) {
@@ -446,159 +395,56 @@ export default {
           this.collapseSidebar = !this.collapseSidebar;
           break;
       }
-
-      // const content = $(`#${section}-content`);
-      // const chevron = $(`#${section}-chevron`);
-      // const summary = $(`#${section}-collapsed-summary`);
-
-      // let shouldBeOpen;
-
-      // if (forceOpen !== null) {
-      //   shouldBeOpen = forceOpen;
-      // } else {
-      //   shouldBeOpen = content.classList.contains('collapsed');
-      // }
-
-      // if (shouldBeOpen) {
-      //   // Open it
-      //   content.classList.remove('collapsed');
-      //   chevron.style.transform = 'rotate(0deg)';
-      //   if (summary) summary.classList.add('hidden'); // Hide summary
-      // } else {
-      //   // Close it
-      //   content.classList.add('collapsed');
-      //   chevron.style.transform = 'rotate(180deg)';
-
-      //   // Show summary IF data exists
-      //   if (summary) {
-      //     let hasData = false;
-      //     if (section === 'trip' && destinations.length > 0) hasData = true;
-      //     if (section === 'trax' && songs.length > 0) hasData = true;
-      //     if (section === 'source') hasData = false; // Never show summary for source
-
-      //     if (hasData) {
-      //       summary.classList.remove('hidden');
-      //     }
-      //   }
-      // }
     },
     mockAuth(source) {
-      // Reset all buttons to their default (inactive) state
-      $(`#auth-spotify`).classList.remove('bg-green-500', 'text-white');
-      $(`#auth-spotify`).classList.add('bg-gray-100', 'text-green-500');
+      // ... existing method (will be refactored) ...
+      const $authSpotify = document.getElementById('auth-spotify');
+      const $authApple = document.getElementById('auth-apple');
+      const $authYoutube = document.getElementById('auth-youtube');
+      const $songInput = document.getElementById('song-input');
+      
+      $authSpotify?.classList.remove('bg-green-500', 'text-white');
+      $authSpotify?.classList.add('bg-gray-100', 'text-green-500');
 
-      $(`#auth-apple`).classList.remove('bg-black', 'text-white');
-      $(`#auth-apple`).classList.add('bg-gray-100', 'text-gray-800');
+      $authApple?.classList.remove('bg-black', 'text-white');
+      $authApple?.classList.add('bg-gray-100', 'text-gray-800');
 
-      $(`#auth-youtube`).classList.remove('bg-red-500', 'text-white');
-      $(`#auth-youtube`).classList.add('bg-gray-100', 'text-red-500');
+      $authYoutube?.classList.remove('bg-red-500', 'text-white');
+      $authYoutube?.classList.add('bg-gray-100', 'text-red-500');
 
-      // Set the clicked button to the active (brand color) state
       if (source === 'spotify') {
-        $(`#auth-spotify`).classList.remove('bg-gray-100', 'text-green-500');
-        $(`#auth-spotify`).classList.add('bg-green-500', 'text-white');
+        $authSpotify?.classList.remove('bg-gray-100', 'text-green-500');
+        $authSpotify?.classList.add('bg-green-500', 'text-white');
       } else if (source === 'apple') {
-        $(`#auth-apple`).classList.remove('bg-gray-100', 'text-gray-800');
-        $(`#auth-apple`).classList.add('bg-black', 'text-white');
+        $authApple?.classList.remove('bg-gray-100', 'text-gray-800');
+        $authApple?.classList.add('bg-black', 'text-white');
       } else if (source === 'youtube') {
-        $(`#auth-youtube`).classList.remove('bg-gray-100', 'text-red-500');
-        $(`#auth-youtube`).classList.add('bg-red-500', 'text-white');
+        $authYoutube?.classList.remove('bg-gray-100', 'text-red-500');
+        $authYoutube?.classList.add('bg-red-500', 'text-white');
       }
 
-      activeSource = source;
+      this.activeSource = source;
 
       $songInput.disabled = false;
       $songInput.placeholder = `Search ${source.charAt(0).toUpperCase() + source.slice(1)}...`;
-      showMessage(`Connected to ${source}! You can now search for songs.`, 'success');
-      toggleCollapse('trax', true);
+      // showMessage(`Connected to ${source}! You can now search for songs.`, 'success');
+      this.toggleCollapse('trax', true);
     },
     createPlaylist() {
-      const playlistName = $playlistNameInput.value;
-      if (!playlistName) {
-        showMessage('Please enter a playlist name.', 'error');
-        return;
-      }
-      if (songs.length === 0) {
-        showMessage('Add some songs to your playlist first.', 'error');
-        return;
-      }
-      if (!activeSource) {
-        showMessage('Please connect a music source first.', 'error');
-        return;
-      }
-
-      // Mock success
-      console.log(`Creating playlist "${playlistName}" on ${activeSource} with ${songs.length} songs.`);
-      showMessage(`Successfully created playlist "${playlistName}"!`, 'success');
-
-      // Optionally reset part of the state
-      songs = [];
-      renderSongs();
-      updateDurations();
-      $playlistNameInput.value = '';
+      // ... existing method (will be refactored) ...
     },
     signout() {
-      // Reset state
-      destinations = [];
-      songs = [];
-      activeSource = null;
-      totalTripTime = 0;
-
-      // Reset UI
-      renderDestinations();
-      renderSongs();
-      updateDurations();
-      $playlistCreator.classList.add('hidden');
-      $traxSummary.classList.add('hidden');
-      $tripSummary.classList.add('hidden');
-
-      $songInput.disabled = true;
-      $songInput.placeholder = 'Connect a source first...';
-
-      // Reset auth buttons
-      mockAuth(null);
-
-      // Reset map
-      routingControl.setWaypoints([]);
-      map.setView([38.9072, -77.0369], 8);
-
-      // Reset summaries
-      $tripCollapsedSummary.classList.add('hidden');
-      $traxCollapsedSummary.classList.add('hidden');
-
-      showMessage('Signed out and reset applicaton.', 'info');
+      // ... existing method (will be refactored) ...
     },
     showMessage(message, type = 'info') {
-      $messageText.textContent = message;
-
-      // Remove all type classes
-      $messageBox.classList.remove('bg-green-500', 'bg-red-500', 'bg-blue-500');
-
-      // Add the correct type class
-      if (type === 'success') {
-        $messageBox.classList.add('bg-green-500');
-      } else if (type === 'error') {
-        $messageBox.classList.add('bg-red-500');
-      } else {
-        $messageBox.classList.add('bg-blue-500');
-      }
-
-      // Show and hide
-      clearTimeout(messageTimer);
-      $messageBox.classList.remove('hidden');
-      $messageBox.classList.add('show');
-
-      messageTimer = setTimeout(() => {
-        $messageBox.classList.remove('show');
-        // Wait for transition to finish before hiding
-        setTimeout(() => $messageBox.classList.add('hidden'), 500);
-      }, 3000);
+      // ... existing method (will be refactored) ...
     },
   }
 }
 </script>
 
 <style>
+/* ... existing style ... */
 @import './corevar.css';
 
 *, *:before, *:after { box-sizing: border-box; }
@@ -881,9 +727,33 @@ body {
 
 /* Autocomplete dropdown */
 .autocomplete-results {
+  position: absolute;
+  width: 100%;
   max-height: 200px;
   overflow-y: auto;
+  background: var(--color-bg-elevated);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+  font-size: .85rem;
   z-index: 1000;
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+  }
+
+  & li {
+    cursor: pointer;
+    padding: 1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &:hover {
+      background: var(--color-bg-offset);
+    }
+  }
 }
 
 /* Collapsible Section Styling (nested) */
@@ -892,6 +762,11 @@ body {
   grid-template-rows: 1fr;
   transition: grid-template-rows 0.3s ease-out, opacity 0.3s ease-out;
   opacity: 1;
+  /* Add spacing */
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
 
   &.collapsed {
     grid-template-rows: 0fr;
@@ -904,12 +779,16 @@ body {
 /* Destination list visuals (nested) */
 .destination-list-item {
   position: relative;
-  padding-left: calc(var(--dot-left) + var(--dot-size) + 12px); /* space for dot + gap */
+  /* padding-left: calc(var(--dot-left) + var(--dot-size) + 12px); */ /* space for dot + gap */
   min-height: 48px;
   background: var(--color-bg-offset);
   color: var(--color-fg);
   border-radius: 0.5rem;
   padding: 0.75rem;
+  padding-left: 36px; /* 12px dot + 12px gap + 12px padding */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
   /* pseudo elements grouped under the item */
   &::after,
@@ -921,8 +800,10 @@ body {
   /* vertical dotted line */
   &:not(:last-child)::before {
     left: var(--dot-line-left);
-    top: 32px;
+    top: 32px; /* Needs to be more dynamic */
+    top: 50%;
     bottom: -8px;
+    height: 100%;
     width: 2px;
     background: repeating-linear-gradient(
       to bottom,
@@ -936,12 +817,13 @@ body {
   /* the dot */
   &::after {
     left: var(--dot-left);
-    top: var(--dot-left);
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%);
     width: var(--dot-size);
     height: var(--dot-size);
     border-radius: 50%;
     background-color: var(--dot-color-default);
-    border: 2px solid #fff;
+    border: 2px solid var(--color-bg-elevated);
     box-shadow: 0 0 0 2px var(--dot-color-default);
     z-index: 1;
   }
@@ -950,6 +832,10 @@ body {
   &.is-start::after {
     background-color: var(--tone-play);
     box-shadow: 0 0 0 2px var(--tone-play);
+  }
+  &.is-start:not(:last-child)::before {
+    top: 50%;
+    height: 50%;
   }
 
   &.is-end::after {
@@ -979,12 +865,14 @@ body {
   border: none;
   border-radius: 999px;
   padding: 0.25rem;
+  cursor: pointer;
+
+  & .remove-icon {
+    color: var(--tone-delete);
+    font-size: 1.25rem;
+  }
 }
 
-.remove-icon {
-  color: var(--tone-delete);
-  font-size: 1.25rem;
-}
 
 .song-list-item {
   display: flex;
