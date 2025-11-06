@@ -4,6 +4,7 @@
   --dot-size: 12px;
   --dot-left: 12px; /* left for dot */
   --dot-line-left: 17px; /* left for vertical line */
+  --border-radius: 16px;
 
   /* Existing semantic colors */
   --dot-color-default: #cbd5e1;

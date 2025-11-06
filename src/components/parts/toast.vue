@@ -1,15 +1,13 @@
 <template>
-  <div 
-    id="message-box" 
-    class="px-4 py-3 rounded-lg text-white font-medium"
+  <div class="toast"
+    v-if="visible"
     :class="{ 
-      'show': visible,
-      'bg-green-500': type === 'success',
-      'bg-red-500': type === 'error',
-      'bg-blue-500': type === 'info'
+      'success': type === 'success',
+      'error': type === 'error',
+      'info': type === 'info'
     }"
   >
-    <span id="message-text">{{ message }}</span>
+    <span>{{ message }}</span>
   </div>
 </template>
 
@@ -30,6 +28,8 @@ export default {
       this.type = type;
       this.visible = true;
 
+      console.log('toast triggered', message, type);
+
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         this.visible = false;
@@ -40,18 +40,28 @@ export default {
 </script>
 
 <style scoped>
-/* Scoped styles for the Toast component */
-#message-box {
+@import '../../corevar.css';
+
+.toast {
   position: fixed;
-  top: -100px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 9999;
-  transition: top 0.4s ease-in-out;
+  padding: 1rem;
+  border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: top 0.4s ease-in-out;
+  z-index: 9999;
+
+  &.success {
+    background-color: #38a169; /* Green */
+  }
+  &.error {
+    background-color: #e53e3e; /* Red */
+  }
+  &.info {
+    background-color: #3182ce; /* Blue */
+  }
 }
 
-#message-box.show {
-  top: 20px;
-}
 </style>

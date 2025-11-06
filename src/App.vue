@@ -17,7 +17,6 @@ import Icon from './components/Icon.vue'
 import Sidebar from './components/parts/sidebar.vue' 
 import Toast from './components/parts/toast.vue'
 import Map from './components/parts/map.vue'
-import L from 'leaflet'
 
 export default {
   name: 'App',
@@ -30,10 +29,14 @@ export default {
     };
   },
 
-  mounted() {},
+  mounted() {
+    // Listen for toast events from Sidebar
+    this.$on('show-toast', this.showToast);
+  },
   methods: {
     // Called by Sidebar
     showToast({ message, type }) {
+      console.log('refs?? ',this.$refs.toast, this.$refs)
       this.$refs.toast.show(message, type);
     },
 

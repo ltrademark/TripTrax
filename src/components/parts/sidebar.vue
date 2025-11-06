@@ -1,9 +1,5 @@
 <template>
   <div id="sidebar" class="sidebar">
-    <!-- 
-      Toast is now handled by App.vue
-    -->
-
     <header class="sidebar-header">
       <div class="branding-wrap">
         <Icon name="logo_full" />
@@ -395,8 +391,8 @@ export default {
 
     selectDestination(result) {
       // This is the key: we explicitly use the 'result' object
-      this.addDestination(result.display_name, result.lat, result.lon);
-      
+      this.addDestination(result.address, result.lat, result.lon);
+      console.log(result)
       // Then we clear the query and results
       this.destinationQuery = '';
       this.destSearchResults = [];
@@ -404,17 +400,19 @@ export default {
 
     addDestination(name, lat, lon) {
       // This method uses the 'name' passed from 'selectDestination'
-      const simpleName = name.split(',')[0];
+      // const simpleName = name.split(',')[0];
+      const listName = (name.house_number ? (name.house_number + ' ') : '') + (name.road || name.city || name.census || name.railway) + ', ' + name.state;
       this.destinations.push({
-        name: simpleName,
+        name: listName,
         lat: parseFloat(lat),
         lng: parseFloat(lon),
       });
+      console.log(name)
+      console.log('showing toast from sidebar');
       this.$emit('show-toast', {
-        message: `Added ${simpleName} to trip!`,
+        message: `Added ${listName} to trip!`,
         type: 'success',
       });
-      this.collapseTrips = false;
     },
 
     removeDestination(index) {
