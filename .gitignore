@@ -2,3 +2,5 @@ node_modules/
 dist/
 .env
 .vscode/
+proto.html
+.DS_Store
