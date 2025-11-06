@@ -1,18 +1,5 @@
 <template>
   <div id="sidebar" class="sidebar">
-    <!-- Toast -->
-    <div 
-      id="message-box" 
-      class="px-4 py-3 rounded-lg text-white font-medium"
-      :class="{ 
-        'show': messageVisible,
-        'bg-green-500': messageType === 'success',
-        'bg-red-500': messageType === 'error',
-        'bg-blue-500': messageType === 'info'
-      }"
-    >
-      <span id="message-text">{{ messageText }}</span>
-    </div>
 
     <header class="sidebar-header">
       <div class="branding-wrap">
@@ -343,7 +330,7 @@ export default {
         this.destSearchResults = data; 
       } catch (error) {
         console.error('Error fetching from Nominatim:', error);
-        this.showMessage('Error searching for location.', 'error');
+        this.$emit('show-toast', { message: 'Error searching for location.', type: 'error' });
       }
     },
     
@@ -356,13 +343,13 @@ export default {
     addDestination(name, lat, lon) {
       const simpleName = name.split(',')[0];
       this.destinations.push({ name: simpleName, lat: parseFloat(lat), lng: parseFloat(lon) });
-      this.showMessage(`Added ${simpleName} to trip!`, 'success');
+      this.$emit('show-toast', { message: `Added ${simpleName} to trip!`, type: 'success' });
       this.collapseTrips = false; // Ensure open
     },
 
     removeDestination(index) {
       const removed = this.destinations.splice(index, 1);
-      this.showMessage(`Removed ${removed[0].name}.`, 'info');
+      this.$emit('show-toast', { message: `Removed ${removed[0].name}.`, type: 'info' });
     },
 
     // --- Trax Methods ---
@@ -382,12 +369,12 @@ export default {
 
     addSong(song) {
       this.songs.push(song);
-      this.showMessage(`Added ${song.title}!`, 'success');
+      this.$emit('show-toast', { message: `Added ${song.title}!`, type: 'success' });
     },
     
     removeSong(index) {
       const removed = this.songs.splice(index, 1);
-      this.showMessage(`Removed ${removed[0].title}.`, 'info');
+      this.$emit('show-toast', { message: `Removed ${removed[0].title}.`, type: 'info' });
     },
 
     // --- Source Methods ---
@@ -396,7 +383,7 @@ export default {
         this.activeSource = null; // Toggle off
       } else {
         this.activeSource = source;
-        this.showMessage(`Connected to ${source}! You can now search for songs.`, 'success');
+        this.$emit('show-toast', { message: `Connected to ${source}! You can now search for songs.`, type: 'success' });
         this.collapseTrax = false; // Open trax section
       }
     },
@@ -422,7 +409,7 @@ export default {
       if (!this.isPlaylistCreatable) return;
       
       console.log(`Creating playlist "${this.playlistName}" on ${this.activeSource} with ${this.songs.length} songs.`);
-      this.showMessage(`Successfully created playlist "${this.playlistName}"!`, 'success');
+      this.$emit('show-toast', { message: `Successfully created playlist "${this.playlistName}"!`, type: 'success' });
 
       // Reset
       this.songs = [];
@@ -440,7 +427,7 @@ export default {
       this.collapseTrips = false;
       this.collapseTrax = false;
       
-      this.showMessage('Signed out and reset applicaton.', 'info');
+      this.$emit('show-toast', { message: 'Signed out and reset applicaton.', type: 'info' });
     },
 
     // --- Utilities ---
@@ -917,20 +904,6 @@ export default {
 
 .wide {
   width: 100%;
-}
-
-#message-box {
-  position: fixed;
-  top: -100px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 9999;
-  transition: top 0.4s ease-in-out;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-#message-box.show {
-  top: 20px;
 }
 
 .app-footer {
